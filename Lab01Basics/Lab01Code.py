@@ -51,7 +51,10 @@ def decrypt_message(K, iv, ciphertext, tag):
     ## YOUR CODE HERE
     aes = Cipher("aes-128-gcm")
 
-    plain = aes.quick_gcm_dec(K, iv, ciphertext, tag)
+    try:
+        plain = aes.quick_gcm_dec(K, iv, ciphertext, tag)
+    except:
+        raise Exception("decryption failed")
 
     return plain.encode("utf8")
 
@@ -296,11 +299,18 @@ def dh_encrypt(pub, message, aliceSig = None):
     ## YOUR CODE HERE
     G, priv_key, pub_key = dh_get_key()
 
-    dh_key = priv_key * pub
+    dh_shared_key = priv_key * pub
 
-    shared_key = None
+    shared_key = sha256(dh_shared_key.export()).digest()[:16]
+    print(type(shared_key), len(shared_key))
 
-    pass
+    iv, ctxt, tag = encrypt_message(shared_key, message)
+
+    sig = None
+    if not aliceSig is None:
+        sig = ecdsa_sign(G, aliceSig, message)
+
+    return (G, pub_key, iv, ctxt, tag, sig)
 
 def dh_decrypt(priv, ciphertext, aliceVer = None):
     """ Decrypt a received message encrypted using your public key, 
@@ -308,7 +318,22 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
     the message came from Alice using her verification key."""
     
     ## YOUR CODE HERE
-    pass
+    G, pub_key_bob, iv, ctxt, tag, sig = ciphertext
+
+    dh_shared_key = priv * pub_key_bob
+
+    shared_key = sha256(dh_shared_key.export()).digest()[:16]
+    print(type(shared_key), len(shared_key))
+
+    message = decrypt_message(shared_key, iv, ctxt, tag)
+
+    if not aliceVer is None:
+        if sig is None:
+            raise Exception("No signature to verify")
+        elif not ecdsa_verify(G, aliceVer, message, sig):
+            raise Exception("Signature is invalid")
+
+    return message            
 
 ## NOTE: populate those (or more) tests
 #  ensure they run using the "py.test filename" command.
@@ -316,7 +341,16 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
 #  $ py.test-2.7 --cov-report html --cov Lab01Code Lab01Code.py 
 
 def test_encrypt():
-    assert False
+    G, priv_sig_alice, pub_ver_alice = dh_get_key()
+    _, priv_dec_bob, pub_enc_bob = dh_get_key()
+    
+    message = "PETHEll0"
+
+    _, pub_enc_alice, iv, ctxt, tag, sig = dh_encrypt(pub_enc_bob, message, priv_sig_alice)
+
+    dec_message = dh_decrypt(priv_dec_bob, (G, pub_enc_alice, iv, ctxt, tag, sig), pub_ver_alice)
+
+    assert message == dec_message
 
 def test_decrypt():
     assert False
