@@ -294,6 +294,12 @@ def dh_encrypt(pub, message, aliceSig = None):
     """
     
     ## YOUR CODE HERE
+    G, priv_key, pub_key = dh_get_key()
+
+    dh_key = priv_key * pub
+
+    shared_key = None
+
     pass
 
 def dh_decrypt(priv, ciphertext, aliceVer = None):
