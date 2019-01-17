@@ -36,6 +36,10 @@ def encrypt_message(K, message):
     plaintext = message.encode("utf8")
     
     ## YOUR CODE HERE
+    aes = Cipher("aes-128-gcm")
+    iv = urandom(16)
+
+    ciphertext, tag = aes.quick_gcm_enc(K, iv, plaintext)
 
     return (iv, ciphertext, tag)
 
@@ -45,6 +49,9 @@ def decrypt_message(K, iv, ciphertext, tag):
         In case the decryption fails, throw an exception.
     """
     ## YOUR CODE HERE
+    aes = Cipher("aes-128-gcm")
+
+    plain = aes.quick_gcm_dec(K, iv, ciphertext, tag)
 
     return plain.encode("utf8")
 
@@ -60,6 +67,10 @@ def decrypt_message(K, iv, ciphertext, tag):
 
 from petlib.bn import Bn
 
+def is_point_infinity(x, y):
+    if x is None and y is None:
+        return True
+    return False
 
 def is_point_on_curve(a, b, p, x, y):
     """
@@ -78,11 +89,11 @@ def is_point_on_curve(a, b, p, x, y):
     assert (isinstance(x, Bn) and isinstance(y, Bn)) \
            or (x == None and y == None)
 
-    if x == None and y == None:
+    if is_point_infinity(x, y):
         return True
 
     lhs = (y * y) % p
-    rhs = (x*x*x + a*x + b) % p
+    rhs = (x * x * x + a * x + b) % p
     on_curve = (lhs == rhs)
 
     return on_curve
@@ -102,6 +113,30 @@ def point_add(a, b, p, x0, y0, x1, y1):
 
     # ADD YOUR CODE BELOW
     xr, yr = None, None
+
+    is_p_inf, is_q_inf = False, False
+    if is_point_infinity(x0, y0):
+        is_p_inf = True
+    if is_point_infinity(x1, y1):
+        is_q_inf = True
+
+    if is_p_inf and is_q_inf:
+        raise Exception("EC Points must not be equal")
+    elif is_p_inf:
+        return (x1, y1)
+    elif is_q_inf:
+        return (x0, y0)
+
+    if x0 == x1 and y0 == y1:
+        raise Exception("EC Points must not be equal")
+
+    x1_minus_x0 = x1 - x0
+    if x1_minus_x0 == 0:
+        return (None, None)
+
+    lam = ((y1 - y0) * x1_minus_x0.mod_inverse(p)) % p
+    xr = (lam * lam - x0 - x1) % p
+    yr = (lam * (x0 - xr) - y0) % p
     
     return (xr, yr)
 
@@ -119,6 +154,13 @@ def point_double(a, b, p, x, y):
 
     # ADD YOUR CODE BELOW
     xr, yr = None, None
+
+    if is_point_infinity(x, y):
+        return (None, None)
+
+    lam = ((3 * x * x + a) * (2 * y).mod_inverse(p)) % p
+    xr = (lam * lam - 2 * x) % p
+    yr = (lam * (x - xr) - y) % p
 
     return xr, yr
 
@@ -139,8 +181,14 @@ def point_scalar_multiplication_double_and_add(a, b, p, x, y, scalar):
     Q = (None, None)
     P = (x, y)
 
+    if is_point_infinity(x, y) or scalar == 0:
+        return (None, None)
+
     for i in range(scalar.num_bits()):
         pass ## ADD YOUR CODE HERE
+        if scalar.is_bit_set(i):
+            Q = point_add(a, b, p, Q[0], Q[1], P[0], P[1])
+        P = point_double(a, b, p, P[0], P[1])
 
     return Q
 
@@ -167,6 +215,12 @@ def point_scalar_multiplication_montgomerry_ladder(a, b, p, x, y, scalar):
 
     for i in reversed(range(0,scalar.num_bits())):
         pass ## ADD YOUR CODE HERE
+        if scalar.is_bit_set(i):
+            R0 = point_add(a, b, p, R0[0], R0[1], R1[0], R1[1])
+            R1 = point_double(a, b, p, R1[0], R1[1])
+        else:
+            R1 = point_add(a, b, p, R0[0], R0[1], R1[0], R1[1])
+            R0 = point_double(a, b, p, R0[0], R0[1])
 
     return R0
 
@@ -197,6 +251,9 @@ def ecdsa_sign(G, priv_sign, message):
     plaintext =  message.encode("utf8")
 
     ## YOUR CODE HERE
+    digest = sha256(plaintext).digest()
+
+    sig = do_ecdsa_sign(G, priv_sign, digest)
 
     return sig
 
@@ -205,6 +262,9 @@ def ecdsa_verify(G, pub_verify, message, sig):
     plaintext =  message.encode("utf8")
 
     ## YOUR CODE HERE
+    digest = sha256(plaintext).digest()
+
+    res = do_ecdsa_verify(G, pub_verify, sig, digest)
 
     return res
 
