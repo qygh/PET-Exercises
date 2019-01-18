@@ -302,8 +302,6 @@ def dh_encrypt(pub, message, aliceSig = None):
     dh_shared_key = priv_key * pub
 
     shared_key = sha256(dh_shared_key.export()).digest()[:16]
-    print(type(dh_shared_key.export()), len(dh_shared_key.export()))
-    print(type(shared_key), len(shared_key))
 
     iv, ctxt, tag = encrypt_message(shared_key, message)
 
@@ -324,8 +322,6 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
     dh_shared_key = priv * pub_key_bob
 
     shared_key = sha256(dh_shared_key.export()).digest()[:16]
-    print(type(dh_shared_key.export()), len(dh_shared_key.export()))
-    print(type(shared_key), len(shared_key))
 
     message = decrypt_message(shared_key, iv, ctxt, tag)
 
@@ -378,7 +374,7 @@ def test_fails():
     assert "No signature to verify" in str(excinfo.value)
 
     with raises(Exception) as excinfo:
-        dh_decrypt(priv_dec_bob, (G, pub_enc_alice, iv, ctxt, tag, (sig[0], sig[1] + 1)), pub_ver_alice)
+        dh_decrypt(priv_dec_bob, (G, pub_enc_alice, iv, ctxt, tag, (sig[0], sig[1] - 1)), pub_ver_alice)
     assert "Signature is invalid" in str(excinfo.value)
 
 #####################################################
