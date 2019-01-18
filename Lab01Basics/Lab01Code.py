@@ -302,6 +302,7 @@ def dh_encrypt(pub, message, aliceSig = None):
     dh_shared_key = priv_key * pub
 
     shared_key = sha256(dh_shared_key.export()).digest()[:16]
+    print(type(dh_shared_key.export()), len(dh_shared_key.export()))
     print(type(shared_key), len(shared_key))
 
     iv, ctxt, tag = encrypt_message(shared_key, message)
@@ -323,6 +324,7 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
     dh_shared_key = priv * pub_key_bob
 
     shared_key = sha256(dh_shared_key.export()).digest()[:16]
+    print(type(dh_shared_key.export()), len(dh_shared_key.export()))
     print(type(shared_key), len(shared_key))
 
     message = decrypt_message(shared_key, iv, ctxt, tag)
@@ -344,19 +346,40 @@ def test_encrypt():
     G, priv_sig_alice, pub_ver_alice = dh_get_key()
     _, priv_dec_bob, pub_enc_bob = dh_get_key()
     
-    message = "PETHEll0"
+    message = "PET01Hell0enc"
 
     _, pub_enc_alice, iv, ctxt, tag, sig = dh_encrypt(pub_enc_bob, message, priv_sig_alice)
-
     dec_message = dh_decrypt(priv_dec_bob, (G, pub_enc_alice, iv, ctxt, tag, sig), pub_ver_alice)
 
     assert message == dec_message
 
 def test_decrypt():
-    assert False
+    G, priv_sig_alice, pub_ver_alice = dh_get_key()
+    _, priv_dec_bob, pub_enc_bob = dh_get_key()
+    
+    message = "PET01Hell0dec"
+
+    _, pub_enc_alice, iv, ctxt, tag, sig = dh_encrypt(pub_enc_bob, message, priv_sig_alice)
+    dec_message = dh_decrypt(priv_dec_bob, (G, pub_enc_alice, iv, ctxt, tag, sig), pub_ver_alice)
+
+    assert message == dec_message
 
 def test_fails():
-    assert False
+    from pytest import raises
+
+    G, priv_sig_alice, pub_ver_alice = dh_get_key()
+    _, priv_dec_bob, pub_enc_bob = dh_get_key()
+    
+    message = "PET01Hell0fails"
+
+    _, pub_enc_alice, iv, ctxt, tag, sig = dh_encrypt(pub_enc_bob, message, priv_sig_alice)
+    with raises(Exception) as excinfo:
+        dh_decrypt(priv_dec_bob, (G, pub_enc_alice, iv, ctxt, tag, None), pub_ver_alice)
+    assert "No signature to verify" in str(excinfo.value)
+
+    with raises(Exception) as excinfo:
+        dh_decrypt(priv_dec_bob, (G, pub_enc_alice, iv, ctxt, tag, (sig[0], sig[1] + 1)), pub_ver_alice)
+    assert "Signature is invalid" in str(excinfo.value)
 
 #####################################################
 # TASK 6 -- Time EC scalar multiplication
