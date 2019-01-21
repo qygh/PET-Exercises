@@ -71,6 +71,8 @@ def decrypt_message(K, iv, ciphertext, tag):
 from petlib.bn import Bn
 
 def is_point_infinity(x, y):
+    """ Check if a point is infinity """
+
     if x is None and y is None:
         return True
     return False

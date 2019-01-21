@@ -178,6 +178,10 @@ def test_Point_addition():
     with raises(Exception) as excinfo:
         point_add(a, b, p, gx0, gy0, gx0, gy0)
     assert 'EC Points must not be equal' in str(excinfo.value)
+    
+    with raises(Exception) as excinfo:
+        point_add(a, b, p, None, None, None, None)
+    assert 'EC Points must not be equal' in str(excinfo.value)
 
 @pytest.mark.task3
 def test_Point_addition_check_inf_result():
@@ -250,6 +254,10 @@ def test_Point_scalar_mult_double_and_add():
     assert is_point_on_curve(a, b, p, x2, y2)
     assert gx2 == x2
     assert gy2 == y2
+    
+    x3, y3 = point_scalar_multiplication_double_and_add(a, b, p, None, None, r)
+    assert x3 is None
+    assert y3 is None
 
 @pytest.mark.task3
 def test_Point_scalar_mult_montgomerry_ladder():
@@ -331,3 +339,9 @@ def test_check_fail():
 @pytest.mark.task5
 def test_key_gen():
     G, priv, pub = dh_get_key()
+
+@pytest.mark.task6
+def test_time_sclar_mul():
+    """ Dummy test for Task 6 """
+    time_scalar_mul()
+    assert True
