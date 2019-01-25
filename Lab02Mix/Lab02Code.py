@@ -74,7 +74,7 @@ def mix_server_one_hop(private_key, message_list):
                not len(msg.hmac) == 20 or \
                not len(msg.address) == 258 or \
                not len(msg.message) == 1002:
-           raise Exception("Malformed input message")
+            raise Exception("Malformed input message")
 
         ## First get a shared key
         shared_element = private_key * msg.ec_public_key
@@ -133,6 +133,26 @@ def mix_client_one_hop(public_key, address, message):
     client_public_key  = private_key * G.generator()
 
     ## ADD CODE HERE
+    # Get a shared key
+    shared_element = private_key * public_key
+    key_material = sha512(shared_element.export()).digest()
+
+    # Use different parts of the shared key for different operations
+    hmac_key = key_material[:16]
+    address_key = key_material[16:32]
+    message_key = key_material[32:48]
+
+    # Encrypt the address and the message
+    iv = b"\x00"*16
+
+    address_cipher = aes_ctr_enc_dec(address_key, iv, address_plaintext)
+    message_cipher = aes_ctr_enc_dec(message_key, iv, message_plaintext)
+
+    # Compute the HMAC
+    h = Hmac(b"sha512", hmac_key)        
+    h.update(address_cipher)
+    h.update(message_cipher)
+    expected_mac = h.digest()[:20]
 
     return OneHopMixMessage(client_public_key, expected_mac, address_cipher, message_cipher)
 
@@ -262,6 +282,39 @@ def mix_client_n_hop(public_keys, address, message):
     client_public_key  = private_key * G.generator()
 
     ## ADD CODE HERE
+    key_materials = []
+    next_blinding_factor = Bn(1)
+    for pubkey in public_keys:
+        shared_element = next_blinding_factor * (private_key * pubkey)
+        key_material = sha512(shared_element.export()).digest()
+
+        hmac_key = key_material[:16]
+        address_key = key_material[16:32]
+        message_key = key_material[32:48]
+
+        key_materials += [(hmac_key, address_key, message_key)]
+
+        next_blinding_factor = Bn.from_binary(key_material[48:])
+
+    new_hmacs = []
+    address_cipher = None
+    message_cipher = None
+    for i, key_material in reversed(list(enumerate(key_materials))):
+        # Encrypt the address and the message
+        iv = b"\x00"*16
+
+        address_cipher = aes_ctr_enc_dec(key_material[1], iv, address_plaintext)
+        message_cipher = aes_ctr_enc_dec(key_material[2], iv, message_plaintext)
+
+        # Encrypt the HMACs
+
+        # Compute the HMAC
+        h = Hmac(b"sha512", key_material[0])        
+        h.update(address_cipher)
+        h.update(message_cipher)
+        new_hmacs += [h.digest()[:20]]
+
+    new_hmacs = reversed(new_hmacs)
 
     return NHopMixMessage(client_public_key, hmacs, address_cipher, message_cipher)
 
