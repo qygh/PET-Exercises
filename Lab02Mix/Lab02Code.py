@@ -373,8 +373,40 @@ def analyze_trace(trace, target_number_of_friends, target=0):
     """
 
     ## ADD CODE HERE
+    #print(len(trace))
+    #print(target_number_of_friends)
+    #print(target)
 
-    return []
+    ctr_all = Counter()
+    ctr_when_target = Counter()
+
+    num_of_receivers_when_target = 0
+
+    for senders, receivers in trace:
+        for r in receivers:
+            ctr_all[r] += 1
+        if target in senders:
+            num_of_receivers_when_target += len(receivers)
+            for r in receivers:
+                ctr_when_target[r] += 1
+
+    num_of_receivers = sum(ctr_all.values())
+    #print(num_of_receivers)
+    #print(num_of_receivers_when_target)
+
+    prob_diff = []
+    for i in range(num_of_receivers):
+        p = ctr_all[i] / float(num_of_receivers)
+        p_when_target = ctr_when_target[i] / float(num_of_receivers_when_target)
+        p_diff = p_when_target - p
+
+        prob_diff += [(i, p_diff)]
+
+    likely = sorted(prob_diff, key=lambda t: t[1], reverse=True)
+    likely = [i for i in likely if i[0] != target]
+    #print(likely[:20])
+
+    return [t[0] for t in likely[:target_number_of_friends]]
 
 ## TASK Q1 (Question 1): The mix packet format you worked on uses AES-CTR with an IV set to all zeros. 
 #                        Explain whether this is a security concern and justify your answer.
