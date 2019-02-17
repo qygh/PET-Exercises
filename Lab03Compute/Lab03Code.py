@@ -28,19 +28,32 @@ def setup():
     return (G, g, h, o)
 
 def keyGen(params):
-   """ Generate a private / public key pair """
-   (G, g, h, o) = params
+    """ Generate a private / public key pair """
+    (G, g, h, o) = params
    
-   # ADD CODE HERE
+    # ADD CODE HERE
+    priv = o.random()
+    while priv == 0:
+        priv = o.random()
 
-   return (priv, pub)
+    pub = priv * g
+
+    return (priv, pub)
 
 def encrypt(params, pub, m):
     """ Encrypt a message under the public key """
     if not -100 < m < 100:
         raise Exception("Message value to low or high.")
 
-   # ADD CODE HERE
+    # ADD CODE HERE
+    (G, g, h, o) = params
+    k = o.random()
+
+    gk = k * g
+    gxk = k * pub
+    hm = m * h
+
+    c = (gk, gxk + hm)
 
     return c
 
@@ -73,9 +86,10 @@ def logh(params, hm):
 def decrypt(params, priv, ciphertext):
     """ Decrypt a message using the private key """
     assert isCiphertext(params, ciphertext)
-    a , b = ciphertext
+    a, b = ciphertext
 
-   # ADD CODE HERE
+    # ADD CODE HERE
+    hm = ((-1) * (priv * a)) + b
 
     return logh(params, hm)
 

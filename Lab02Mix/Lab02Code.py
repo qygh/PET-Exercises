@@ -373,9 +373,6 @@ def analyze_trace(trace, target_number_of_friends, target=0):
     """
 
     ## ADD CODE HERE
-    #print(len(trace))
-    #print(target_number_of_friends)
-    #print(target)
 
     ctr_all = Counter()
     ctr_when_target = Counter()
@@ -391,8 +388,6 @@ def analyze_trace(trace, target_number_of_friends, target=0):
                 ctr_when_target[r] += 1
 
     num_of_receivers = sum(ctr_all.values())
-    #print(num_of_receivers)
-    #print(num_of_receivers_when_target)
 
     prob_diff = []
     for i in range(num_of_receivers):
@@ -403,20 +398,27 @@ def analyze_trace(trace, target_number_of_friends, target=0):
         prob_diff += [(i, p_diff)]
 
     likely = sorted(prob_diff, key=lambda t: t[1], reverse=True)
-    likely = [i for i in likely if i[0] != target]
-    #print(likely[:20])
+    #likely = [i for i in likely if i[0] != target]
 
     return [t[0] for t in likely[:target_number_of_friends]]
 
 ## TASK Q1 (Question 1): The mix packet format you worked on uses AES-CTR with an IV set to all zeros. 
 #                        Explain whether this is a security concern and justify your answer.
 
-""" TODO: Your answer HERE """
+""" Since key-IV pairs should never be reused, and the IV is set to all zeros, the key must not repeat. 
+    The AES keys are from the hash of the key material, which is derived from client's private key and 
+    server's public key(for the client). This means the client should always generate a fresh EC key when 
+    sending a message. There is a security concern if the client reuses same EC key for multiple messages 
+    or generates the private key from a poor source of randomness which makes it easier to guess. """
 
 
 ## TASK Q2 (Question 2): What assumptions does your implementation of the Statistical Disclosure Attack 
 #                        makes about the distribution of traffic from non-target senders to receivers? Is
 #                        the correctness of the result returned dependent on this background distribution?
 
-""" TODO: Your answer HERE """
+""" My assumption is that the distribution of traffic from non-target senders to receivers stay the same 
+    and independent of whether the target is sending. I assumed friends are more likely to be among receivers 
+    when the target is among senders, which means the difference between probability of a user in receivers 
+    and the same user in receivers when the target sending is greater when they are more likely to be friends. 
+    The correctness of the result does not depend on the background distribution if they are independent. """
 
