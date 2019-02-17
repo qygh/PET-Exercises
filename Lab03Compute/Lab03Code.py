@@ -105,7 +105,14 @@ def add(params, pub, c1, c2):
     assert isCiphertext(params, c1)
     assert isCiphertext(params, c2)
 
-   # ADD CODE HERE
+    # ADD CODE HERE
+    a1, b1 = c1
+    a2, b2 = c2
+
+    a3 = a1 + a2
+    b3 = b1 + b2
+
+    c3 = (a3, b3)
 
     return c3
 
@@ -114,7 +121,13 @@ def mul(params, pub, c1, alpha):
         product of the plaintext time alpha """
     assert isCiphertext(params, c1)
 
-   # ADD CODE HERE
+    # ADD CODE HERE
+    a1, b1 = c1
+
+    a3 = alpha * a1
+    b3 = alpha * b1
+
+    c3 = (a3, b3)
 
     return c3
 
@@ -127,7 +140,10 @@ def groupKey(params, pubKeys=[]):
     """ Generate a group public key from a list of public keys """
     (G, g, h, o) = params
 
-   # ADD CODE HERE
+    # ADD CODE HERE
+    pub = pubKeys[0]
+    for pk in pubKeys[1:]:
+        pub += pk
 
     return pub
 
@@ -137,6 +153,11 @@ def partialDecrypt(params, priv, ciphertext, final=False):
     assert isCiphertext(params, ciphertext)
     
     # ADD CODE HERE
+    (G, g, h, o) = params
+    a, b = ciphertext
+
+    b1 = ((-1) * (priv * a)) + b
+    a1 = a
 
     if final:
         return logh(params, b1)
