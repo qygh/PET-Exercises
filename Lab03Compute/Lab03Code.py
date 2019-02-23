@@ -177,7 +177,13 @@ def corruptPubKey(params, priv, OtherPubKeys=[]):
         corrupt authority. """
     (G, g, h, o) = params
     
-   # ADD CODE HERE
+    # ADD CODE HERE
+    pub = G.infinite()
+    for pk in OtherPubKeys:
+        pub += pk
+
+    pub = (-1) * pub
+    pub += priv * g
 
     return pub
 
@@ -192,7 +198,14 @@ def encode_vote(params, pub, vote):
         zero and the votes for one."""
     assert vote in [0, 1]
 
-   # ADD CODE HERE
+    # ADD CODE HERE
+    m = (0, 0)
+    if vote == 0:
+        m = (1, 0)
+    else:
+        m = (0, 1)
+    v0 = encrypt(params, pub, m[0])
+    v1 = encrypt(params, pub, m[1])
 
     return (v0, v1)
 
@@ -201,7 +214,13 @@ def process_votes(params, pub, encrypted_votes):
         to sum votes for zeros and votes for ones. """
     assert isinstance(encrypted_votes, list)
     
-   # ADD CODE HERE
+    # ADD CODE HERE
+    (G, g, h, o) = params
+    (tv0, tv1) = encrypted_votes[0]
+
+    for (v0, v1) in encrypted_votes[1:]:
+        tv0 = add(params, pub, tv0, v0)
+        tv1 = add(params, pub, tv1, v1)
 
     return tv0, tv1
 
