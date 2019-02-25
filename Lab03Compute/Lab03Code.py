@@ -48,6 +48,8 @@ def encrypt(params, pub, m):
     # ADD CODE HERE
     (G, g, h, o) = params
     k = o.random()
+    while k == 0:
+        k = o.random()
 
     gk = k * g
     gxk = k * pub
@@ -271,7 +273,10 @@ def simulate_poll(votes):
 # What is the advantage of the adversary in guessing b given your implementation of 
 # Homomorphic addition? What are the security implications of this?
 
-""" Your Answer here """
+""" The advantage is 0.5. Since the adversary can simply compute Ca + Cb,
+    Cb + Cc, and compare them with C, the probability of success is 1.
+    The security implication is that deterministic homomorphic addition
+    cannot protect the confidentiality of choice of input ciphertects. """
 
 ###########################################################
 # TASK Q2 -- Answer questions regarding your implementation
@@ -282,4 +287,10 @@ def simulate_poll(votes):
 # that it yields an arbitrary result. Can those malicious actions 
 # be detected given your implementation?
 
-""" Your Answer here """
+""" (a) A malicious user would return a pair of ciphertexts of large numbers
+    so that discrete log cannot be computed by logh().
+    This can be detected because logh() would fail during decryption.
+    (b) A malicious user would ask threshold decryption parties to decrypt
+    other users' votes, compute their sum s1, s2, then encrypt p1, p2 such that
+    both s1 + p1 and s2 + p2 would be desired values.
+    This cannot be detected by this implementation. """
