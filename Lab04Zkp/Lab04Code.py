@@ -52,6 +52,10 @@ def proveKey(params, priv, pub):
     (G, g, hs, o) = params
     
     ## YOUR CODE HERE:
+    w = o.random()
+    gw = w * g
+    c = to_challenge([g, gw])
+    r = w - c * priv
     
     return (c, r)
 
