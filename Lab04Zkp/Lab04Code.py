@@ -96,6 +96,21 @@ def proveCommitment(params, C, r, secrets):
     x0, x1, x2, x3 = secrets
 
     ## YOUR CODE HERE:
+    w0 = o.random()
+    w1 = o.random()
+    w2 = o.random()
+    w3 = o.random()
+    wr = o.random()
+
+    W = w0 * h0 + w1 * h1 + w2 * h2 + w3 * h3 + wr * g
+    c = to_challenge([g, h0, h1, h2, h3, W])
+    r0 = w0 - c * x0
+    r1 = w1 - c * x1
+    r2 = w2 - c * x2
+    r3 = w3 - c * x3
+    rr = wr - c * r
+
+    responses = (r0, r1, r2, r3, rr)
 
     return (c, responses)
 
