@@ -158,8 +158,11 @@ def verifyDLEquality(params, K, L, proof):
     c, r = proof
 
     ## YOUR CODE HERE:
+    Kw_prime = r * g + c * K
+    Lw_prime = r * h0 + c * L
+    c_prime = to_challenge([g, h0, Kw_prime, Lw_prime])
 
-    return # YOUR RETURN HERE
+    return c_prime == c # YOUR RETURN HERE
 
 #####################################################
 # TASK 4 -- Prove correct encryption and knowledge of 
