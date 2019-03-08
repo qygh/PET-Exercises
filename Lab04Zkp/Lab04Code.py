@@ -55,7 +55,7 @@ def proveKey(params, priv, pub):
     w = o.random()
     gw = w * g
     c = to_challenge([g, gw])
-    r = w - c * priv
+    r = (w - c * priv) % o
     
     return (c, r)
 
@@ -104,11 +104,11 @@ def proveCommitment(params, C, r, secrets):
 
     W = w0 * h0 + w1 * h1 + w2 * h2 + w3 * h3 + wr * g
     c = to_challenge([g, h0, h1, h2, h3, W])
-    r0 = w0 - c * x0
-    r1 = w1 - c * x1
-    r2 = w2 - c * x2
-    r3 = w3 - c * x3
-    rr = wr - c * r
+    r0 = (w0 - c * x0) % o
+    r1 = (w1 - c * x1) % o
+    r2 = (w2 - c * x2) % o
+    r3 = (w3 - c * x3) % o
+    rr = (wr - c * r) % o
 
     responses = (r0, r1, r2, r3, rr)
 
@@ -186,6 +186,16 @@ def proveEnc(params, pub, Ciphertext, k, m):
     a, b = Ciphertext
 
     ## YOUR CODE HERE:
+    w0 = o.random()
+    w1 = o.random()
+
+    Aw = w0 * g
+    Bw = w0 * pub + w1 * h0
+
+    c = to_challenge([g, h0, Aw, Bw])
+
+    rk = (w0 - c * k) % o
+    rm = (w1 - c * m) % o
 
     return (c, (rk, rm))
 
@@ -196,8 +206,11 @@ def verifyEnc(params, pub, Ciphertext, proof):
     (c, (rk, rm)) = proof
 
     ## YOUR CODE HERE:
+    Aw_prime = rk * g + c * a
+    Bw_prime = rk * pub + rm * h0 + c * b
+    c_prime = to_challenge([g, h0, Aw_prime, Bw_prime])
 
-    return ## YOUR RETURN HERE
+    return c_prime == c ## YOUR RETURN HERE
 
 
 #####################################################
@@ -221,16 +234,47 @@ def prove_x0eq10x1plus20(params, C, x0, x1, r):
     (G, g, (h0, h1, h2, h3), o) = params
 
     ## YOUR CODE HERE:
+    w0 = o.random()
+    w1 = o.random()
+    wr = o.random()
 
-    return ## YOUR RETURN HERE
+    W = w0 * h0 + w1 * h1 + wr * g
+
+    h010h1 = (10 * h0) + h1
+    w1r = o.random()
+    wlr = o.random()
+
+    Wlr = w1r * h010h1 + wlr * g
+
+    c = to_challenge([g, h0, h1, W, Wlr])
+
+    r0 = (w0 - c * x0) % o
+    r1 = (w1 - c * x1) % o
+    rr = (wr - c * r) % o
+
+    r1r = (w1r - c * x1) % o
+    rlr = (wlr - c * r) % o
+
+    responses = (r0, r1, rr, r1r, rlr)
+
+    return (c, responses) ## YOUR RETURN HERE
 
 def verify_x0eq10x1plus20(params, C, proof):
     """ Verify that proof of knowledge of C and x0 = 10 x1 + 20. """
     (G, g, (h0, h1, h2, h3), o) = params
 
     ## YOUR CODE HERE:
+    h010h1 = (10 * h0) + h1
 
-    return ## YOUR RETURN HERE
+    c, responses = proof
+    (r0, r1, rr, r1r, rlr) = responses
+
+    Cp = c * C + r0 * h0 + r1 * h1 + rr * g
+    Clrp = c * (C - 20 * h0) + r1r * h010h1 + rlr * g
+
+    cp = to_challenge([g, h0, h1, Cp, Clrp])
+
+    return cp == c ## YOUR RETURN HERE
 
 #####################################################
 # TASK 6 -- (OPTIONAL) Prove that a ciphertext is either 0 or 1
@@ -275,7 +319,13 @@ def test_bin_incorrect():
 # that  deviates from the Schnorr identification protocol? Justify 
 # your answer by describing what a dishonest verifier may do.
 
-""" TODO: Your answer here. """
+""" "Plausible deniability" does not hold against a dishonest verifier.
+    A dishonet verifier can prove to everyone that the holder of secret
+    actually took part in the protocol acting as the prover, by sending 
+    a challenge c = Hash(W), getting the response r and publishing (W,c,r)
+    as well as the cryptographic hash function used. Such transcript cannot
+    be made without knowing the secret since W must be known before c.
+    (Causality, as in Slide 13) """
 
 #####################################################
 # TASK Q2 - Answer the following question:
@@ -288,7 +338,8 @@ def test_bin_incorrect():
 #
 # Hint: Look at "test_prove_something" too.
 
-""" TODO: Your answer here. """
+""" Verifier is convinced that prover knows the secret that one
+    of the commitments is commited to. """
 
 def prove_something(params, KX, KY, y):
     (G, g, _, o) = params
