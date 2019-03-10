@@ -339,7 +339,7 @@ def test_bin_incorrect():
 # Hint: Look at "test_prove_something" too.
 
 """ Verifier is convinced that prover knows the secret that one
-    of the commitments is commited to. """
+    of the commitments is commited to, but not exactly which. """
 
 def prove_something(params, KX, KY, y):
     (G, g, _, o) = params
