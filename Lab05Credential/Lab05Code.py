@@ -91,6 +91,19 @@ def credential_EncryptUserSecret(params, pub, priv):
     #                     pub = priv * g}
 
     ## TODO
+    w0 = o.random()
+    w1 = o.random()
+    w2 = o.random()
+
+    Aw = w0 * g
+    Bw = w0 * pub + w1 * g
+    Pw = w2 * g
+
+    c = to_challenge([g, pub, a, b, Aw, Bw, Pw])
+
+    rk = (w0 - c * k) % o
+    rv = (w1 - c * v) % o
+    rpriv = (w2 - c * priv) % o
 
     # Return the fresh v, the encryption of v and the proof.
     proof = (c, rk, rv, rpriv)
@@ -143,6 +156,9 @@ def credential_Issuing(params, pub, ciphertext, issuer_params):
     #     and x1b = (b * x1) mod o 
     
     # TODO 1 & 2
+    u = b * g
+    X1b = b * X1
+    x1b = (b * x1) % o
 
     # 3) The encrypted MAC is u, and an encrypted u_prime defined as 
     #    E( (b*x0) * g + (x1 * b * v) * g ) + E(0; r_prime)
