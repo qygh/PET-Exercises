@@ -308,7 +308,7 @@ def credential_show(params, issuer_pub_params, u, u_prime, v):
     W0 = w2 * u + w1 * h
     W1 = w0 * (-g) + w1 * X1
 
-    c = to_challenge([g, h, Cv, Cup, W0, W1])
+    c = to_challenge([g, h, u, Cv, Cup, W0, W1])
 
     rr = (w0 - c * r) % o
     rz1 = (w1 - c * z1) % o
@@ -332,9 +332,9 @@ def credential_show_verify(params, issuer_params, tag, proof):
     (u, Cv, Cup) = tag
 
     ## TODO
-    V = x0 * u + x1 * Cv -Cup
+    V = x0 * u + x1 * Cv - Cup
 
-    c_prime = to_challenge([g, h, Cv, Cup, c * Cv + rv * u + rz1 * h, c * V + rr * (-g) + rz1 * X1])
+    c_prime = to_challenge([g, h, u, Cv, Cup, c * Cv + rv * u + rz1 * h, c * V + rr * (-g) + rz1 * X1])
 
     return c == c_prime
 
@@ -360,9 +360,9 @@ def credential_show_pseudonym(params, issuer_pub_params, u, u_prime, v, service_
 
     ## TODO (use code from above and modify as necessary!)
     # TODO 1
-    alpha = o.random()
-    u = alpha * u
-    u_prime = alpha * u_prime
+    #alpha = o.random()
+    #u = alpha * u
+    #u_prime = alpha * u_prime
 
     # 2) Implement the "Show" protocol (p.9) for a single attribute v.
     #    Cv is a commitment to v and Cup is C_{u'} in the paper. 
@@ -389,14 +389,16 @@ def credential_show_pseudonym(params, issuer_pub_params, u, u_prime, v, service_
 
     W0 = w2 * u + w1 * h
     W1 = w0 * (-g) + w1 * X1
+    W2 = w2 * N
 
-    c = to_challenge([g, h, Cv, Cup, W0, W1])
+    c = to_challenge([g, h, u, N, Cv, Cup, pseudonym, W0, W1, W2])
 
     rr = (w0 - c * r) % o
     rz1 = (w1 - c * z1) % o
     rv = (w2 - c * v) % o
+    rp = (w2 - c * v) % o
 
-    proof = (c, rr, rz1, rv)
+    proof = (c, rr, rz1, rv, rp)
 
     return pseudonym, tag, proof
 
@@ -417,6 +419,12 @@ def credential_show_verify_pseudonym(params, issuer_params, pseudonym, tag, proo
     ## Verify the correct Show protocol and the correctness of the pseudonym
 
     # TODO (use code from above and modify as necessary!)
+    (c, rr, rz1, rv, rp) = proof
+    (u, Cv, Cup) = tag
+
+    V = x0 * u + x1 * Cv - Cup
+
+    c_prime = to_challenge([g, h, u, N, Cv, Cup, pseudonym, c * Cv + rv * u + rz1 * h, c * V + rr * (-g) + rz1 * X1, c * pseudonym + rp * N])
 
     return c == c_prime
 
