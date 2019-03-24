@@ -360,9 +360,9 @@ def credential_show_pseudonym(params, issuer_pub_params, u, u_prime, v, service_
 
     ## TODO (use code from above and modify as necessary!)
     # TODO 1
-    #alpha = o.random()
-    #u = alpha * u
-    #u_prime = alpha * u_prime
+    alpha = o.random()
+    u = alpha * u
+    u_prime = alpha * u_prime
 
     # 2) Implement the "Show" protocol (p.9) for a single attribute v.
     #    Cv is a commitment to v and Cup is C_{u'} in the paper. 
@@ -437,4 +437,11 @@ def credential_show_verify_pseudonym(params, issuer_params, pseudonym, tag, proo
 # What would the credential represent, and what statements
 # would need to be shown to a verifier.
 
-""" Your answer here. """
+""" 
+    The credential scheme above would be used.
+    Issuer gets payment from a user and provides a credential with a randomised attribute representing that amount of money.
+    User spends the money by running the showing protocol.
+    The credential is blinded each time before showing to make transactions unlinkable for privacy.
+    The credential would represent the amount of money the user is allowed to spend.
+    The user would prove the possession of the credential with the secret attribute.
+"""
